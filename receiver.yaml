@@ -1,0 +1,107 @@
+openapi: 3.0.0
+info:
+  title: IAM Security Telemetry Receiver
+  version: 1.0.0
+
+paths:
+  # There are two POST endpoints below
+  # each represents an event
+  
+  /auth/login:                                      # This is a URL - an API endpoint
+    post:                                           # the HTTP method
+      summary: Reports a user login attempt
+      operationId: receiver.login_event             # This refers to the python function being invoked
+      description: adds a login attempt reading
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginEvent'
+      responses:
+        '201':
+          description: Looks good! I've accepted your data
+        '400':
+          description: invalid input, object invalid
+  /auth/access-check:
+    post: 
+      summary: Reports an access request for a protected file path
+      operationId: receiver.access_check
+      description: adds a access check reading
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccessCheck'
+      responses:
+        '201':
+          description: Looks good! I've accepted your data
+        '400':
+          description: invalid input, object invalid
+
+components:
+  schemas:
+    LoginEvent:
+      type: object
+      required:
+        - user_id
+        - failed_attempts
+        - timestamp
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          description: User identifier
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        failed_attempts:
+          type: integer
+          description: Metric for statistics (e.g., failed attempts before login)
+          example: 3
+        timestamp:
+          type: string
+          format: date-time
+          description: Event recording time (ISO 8601)
+          example: "2026-09-22T10:33:36Z"
+        ip_address:
+          type: string
+          description: Client IP address
+          example: "192.168.1.105"
+        status:
+          type: string
+          description: SUCCESS or FAILURE
+          enum: ["SUCCESS", "FAILURE"]
+          example: "FAILURE"
+
+    AccessCheck:
+      type: object
+      required:
+        - user_id
+        - privilege_level
+        - timestamp
+        - resource_path
+        - access_granted
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          description: User identifier
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        privilege_level:
+          type: integer
+          description: Metric for statistics (1 = User, 2 = Manager, 3 = Admin)
+          example: 2
+        timestamp:
+          type: string
+          format: date-time
+          description: Event recording time (ISO 8601)
+          example: "2026-09-22T10:33:36Z"
+        resource_path:
+          type: string
+          description: Target endpoint (e.g., /admin/finance)
+          example: "/admin/finance"
+          pattern: "^/[a-zA-Z0-9/_-]+$"       # Restricts the pattern to a file path
+          minLength: 2
+          maxLength: 100
+        access_granted:
+          type: boolean
+          description: true or false
+          example: false

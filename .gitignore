@@ -1,0 +1,19 @@
+# Environments
+.venv/
+env/
+venv/
+ENV/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Application Data (Ignore the local database/events file)
+events.json
+
+# IDEs
+.vscode/
+.idea/
+*.swp
