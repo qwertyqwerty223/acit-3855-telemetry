@@ -12,6 +12,7 @@ __pycache__/
 
 # Application Data (Ignore the local database/events file)
 events.json
+acit-acit-3855-git-workflow-plan.md
 
 # IDEs
 .vscode/
