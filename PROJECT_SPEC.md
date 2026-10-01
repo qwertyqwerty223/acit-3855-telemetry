@@ -48,7 +48,7 @@ Collects and audits real-time user login and access-control events to monitor su
 - **Run Server:**
 
   ```bash
-  uvicorn receiver:app --reload --port 8080
+  uvicorn receiver:app --reload --reload-include receiver.yaml --port 8080
   ```
 
 - **Swagger UI:** `http://localhost:8080/ui/`
