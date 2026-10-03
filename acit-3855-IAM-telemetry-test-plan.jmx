@@ -16,7 +16,7 @@
         </collectionProp>
       </HeaderManager>
       <hashTree/>
-      <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report">
+      <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report" enabled="true">
         <boolProp name="ResultCollector.error_logging">false</boolProp>
         <objProp>
           <name>saveConfig</name>
@@ -53,7 +53,7 @@
         <stringProp name="filename"></stringProp>
       </ResultCollector>
       <hashTree/>
-      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree">
+      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
         <boolProp name="ResultCollector.error_logging">false</boolProp>
         <objProp>
           <name>saveConfig</name>
@@ -115,11 +115,11 @@
               <elementProp name="" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
                 <stringProp name="Argument.value">{&#xd;
-	&quot;user_id&quot;: &quot;123e4567-e89b-12d3-a456-426614174000&quot;,&#xd;
-	&quot;failed_attempts&quot;: 3,&#xd;
-	&quot;timestamp&quot;: &quot;2026-09-22T10:33:36Z&quot;,&#xd;
-	&quot;ip_address&quot;: &quot;192.168.1.105&quot;,&#xd;
-	&quot;status&quot;: &quot;FAILURE&quot;&#xd;
+	&quot;user_id&quot;: &quot;${__UUID()}&quot;,&#xd;
+	&quot;failed_attempts&quot;: ${__Random(0,100,)},&#xd;
+	&quot;timestamp&quot;: &quot;${__time(yyyy-MM,)}-${random_day}T${random_hour}:${random_minute}:${__Random(10,59,)}.${__Random(100,999,)}Z&quot;,&#xd;
+	&quot;ip_address&quot;: &quot;${__Random(1,255)}.${__Random(0,255)}.${__Random(0,255)}.${__Random(1,254)}&quot;,&#xd;
+	&quot;status&quot;: &quot;${__jexl3(${__Random(0,1)} == 1 ? &apos;SUCCESS&apos; : &apos;FAILURE&apos;)}&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -141,9 +141,9 @@
               <elementProp name="" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
                 <stringProp name="Argument.value">{&#xd;
-	&quot;user_id&quot;: &quot;123e4567-e89b-12d3-a456-426614174000&quot;,&#xd;
-	&quot;privilege_level&quot;: 2,&#xd;
-	&quot;timestamp&quot;: &quot;2026-09-22T10:33:36Z&quot;,&#xd;
+	&quot;user_id&quot;: &quot;${__UUID()}&quot;,&#xd;
+	&quot;privilege_level&quot;: ${__Random(0,2,)},&#xd;
+	&quot;timestamp&quot;: &quot;${__time(yyyy-MM,)}-${random_day}T${random_hour}:${random_minute}:${__Random(10,59,)}.${__Random(100,999,)}Z&quot;,&#xd;
 	&quot;resource_path&quot;: &quot;/admin/finance&quot;,&#xd;
 	&quot;access_granted&quot;: false&#xd;
 }</stringProp>
@@ -152,6 +152,15 @@
             </collectionProp>
           </elementProp>
         </HTTPSamplerProxy>
+        <hashTree/>
+        <CounterConfig guiclass="CounterConfigGui" testclass="CounterConfig" testname="Counter">
+          <stringProp name="CounterConfig.start"></stringProp>
+          <stringProp name="CounterConfig.end"></stringProp>
+          <stringProp name="CounterConfig.incr"></stringProp>
+          <stringProp name="CounterConfig.name"></stringProp>
+          <stringProp name="CounterConfig.format"></stringProp>
+          <boolProp name="CounterConfig.per_user">false</boolProp>
+        </CounterConfig>
         <hashTree/>
       </hashTree>
     </hashTree>
