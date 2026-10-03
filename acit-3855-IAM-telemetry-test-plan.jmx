@@ -144,8 +144,8 @@
 	&quot;user_id&quot;: &quot;${__UUID()}&quot;,&#xd;
 	&quot;privilege_level&quot;: ${__Random(0,2,)},&#xd;
 	&quot;timestamp&quot;: &quot;${__time(yyyy-MM,)}-${random_day}T${random_hour}:${random_minute}:${__Random(10,59,)}.${__Random(100,999,)}Z&quot;,&#xd;
-	&quot;resource_path&quot;: &quot;/admin/finance&quot;,&#xd;
-	&quot;access_granted&quot;: false&#xd;
+	&quot;resource_path&quot;: &quot;${__V(path_${__Random(1,20)})}&quot;,&#xd;
+	&quot;access_granted&quot;: ${__jexl3(${__Random(0,1)} == 1 ? true : false)}&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -179,6 +179,111 @@
           <stringProp name="CounterConfig.format"></stringProp>
           <boolProp name="CounterConfig.per_user">true</boolProp>
         </CounterConfig>
+        <hashTree/>
+        <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="resource_path_list">
+          <collectionProp name="Arguments.arguments">
+            <elementProp name="path_1" elementType="Argument">
+              <stringProp name="Argument.name">path_1</stringProp>
+              <stringProp name="Argument.value">/auth/login</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="path_2" elementType="Argument">
+              <stringProp name="Argument.name">path_2</stringProp>
+              <stringProp name="Argument.value">/auth/mfa/verify</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="path_3" elementType="Argument">
+              <stringProp name="Argument.name">path_3</stringProp>
+              <stringProp name="Argument.value">/oauth2/token</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="path_4" elementType="Argument">
+              <stringProp name="Argument.name">path_4</stringProp>
+              <stringProp name="Argument.value">/oauth2/authorize</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="path_5" elementType="Argument">
+              <stringProp name="Argument.name">path_5</stringProp>
+              <stringProp name="Argument.value">/api/v1/users/register</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="path_6" elementType="Argument">
+              <stringProp name="Argument.name">path_6</stringProp>
+              <stringProp name="Argument.value">/api/v1/users/profile</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="path_7" elementType="Argument">
+              <stringProp name="Argument.name">path_7</stringProp>
+              <stringProp name="Argument.value">/api/v1/users/permissions</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="path_8" elementType="Argument">
+              <stringProp name="Argument.name">path_8</stringProp>
+              <stringProp name="Argument.value">/admin/finance/dashboard</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="path_9" elementType="Argument">
+              <stringProp name="Argument.name">path_9</stringProp>
+              <stringProp name="Argument.value">/admin/system/audit-logs</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="path_10" elementType="Argument">
+              <stringProp name="Argument.name">path_10</stringProp>
+              <stringProp name="Argument.value">/admin/users/suspend</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="path_11" elementType="Argument">
+              <stringProp name="Argument.name">path_11</stringProp>
+              <stringProp name="Argument.value">/admin/roles/assign</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="path_12" elementType="Argument">
+              <stringProp name="Argument.name">path_12</stringProp>
+              <stringProp name="Argument.value">/telemetry/events</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="path_13" elementType="Argument">
+              <stringProp name="Argument.name">path_13</stringProp>
+              <stringProp name="Argument.value">/telemetry/traces</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="path_14" elementType="Argument">
+              <stringProp name="Argument.name">path_14</stringProp>
+              <stringProp name="Argument.value">/metrics/prometheus</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="path_15" elementType="Argument">
+              <stringProp name="Argument.name">path_15</stringProp>
+              <stringProp name="Argument.value">/logs/ingest</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="path_16" elementType="Argument">
+              <stringProp name="Argument.name">path_16</stringProp>
+              <stringProp name="Argument.value">/health/liveness</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="path_17" elementType="Argument">
+              <stringProp name="Argument.name">path_17</stringProp>
+              <stringProp name="Argument.value">/health/readiness</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="path_18" elementType="Argument">
+              <stringProp name="Argument.name">path_18</stringProp>
+              <stringProp name="Argument.value">/billing/invoices/current</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="path_19" elementType="Argument">
+              <stringProp name="Argument.name">path_19</stringProp>
+              <stringProp name="Argument.value">/webhooks/incoming</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="path_20" elementType="Argument">
+              <stringProp name="Argument.name">path_20</stringProp>
+              <stringProp name="Argument.value">/docs/openapi.json</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+          </collectionProp>
+        </Arguments>
         <hashTree/>
       </hashTree>
     </hashTree>
