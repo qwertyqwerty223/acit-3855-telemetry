@@ -6,7 +6,6 @@ info:
 paths:
   # There are two POST endpoints below
   # each represents an event
-  
   /auth/login:                                      # This is a URL - an API endpoint
     post:                                           # the HTTP method
       summary: Reports a user login attempt
