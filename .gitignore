@@ -17,3 +17,7 @@ events.json
 .vscode/
 .idea/
 *.swp
+*.sqlite
+*.jtl
+jmeter.log
+report/
