@@ -1,4 +1,5 @@
 import connexion
+import uvicorn
 import requests
 from connexion import NoContent
 
@@ -29,5 +30,4 @@ app = connexion.AsyncApp(__name__, specification_dir='')
 app.add_api("receiver.yaml", strict_validation=True, validate_responses=True)
 
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8080)

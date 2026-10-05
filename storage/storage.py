@@ -1,4 +1,5 @@
 import connexion
+import uvicorn
 from connexion import NoContent
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -49,6 +50,5 @@ app = connexion.AsyncApp(__name__, specification_dir='')
 app.add_api("storage.yaml", strict_validation=True, validate_responses=True)
 
 if __name__ == "__main__":
-    import uvicorn
     # Make sure to run this on a different port than the receiver!
     uvicorn.run(app, host="0.0.0.0", port=8090)
