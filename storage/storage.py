@@ -4,6 +4,15 @@ from connexion import NoContent
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models import LoginEvent, AccessCheck
+import logging
+import logging.config
+import yaml
+
+with open('log_conf.yml', 'r') as f:
+    log_config = yaml.safe_load(f.read())
+    logging.config.dictConfig(log_config)
+
+logger = logging.getLogger('storage')
 
 ENGINE = create_engine("mysql://skibidi:helpme@127.0.0.1:3306/events")
 
@@ -26,6 +35,8 @@ def login_event(body):
     session.add(event)
     session.commit()
     session.close()
+
+    logger.debug(f"Stored event 'login' with a trace id of {body['trace_id']}")
     
     return NoContent, 201
 
@@ -46,6 +57,8 @@ def access_check(body):
     session.commit()
     session.close()
     
+    logger.debug(f"Stored event 'Access Check' with a trace id of {body['trace_id']}")
+
     return NoContent, 201
 
 app = connexion.AsyncApp(__name__, specification_dir='')
