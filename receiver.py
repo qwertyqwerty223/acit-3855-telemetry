@@ -20,7 +20,7 @@ def login_event(body):
     """Handle incoming login events and forward to storage."""
 
     # 1. Generate teh trace_id
-    body['trace_id'] = time.time_ns()
+    body['trace_id'] = str(time.time_ns())
 
     # 2. Log that the event was received (INFO level)
     logger.info(f"Received 'login' event - user_id : {body['user_id']} | trace_id {body['trace_id']}")
@@ -39,7 +39,7 @@ def access_check(body):
     """Handle incoming access check events and forward to storage."""
 
     # 1. Generate teh trace_id
-    body['trace_id'] = time.time_ns()
+    body['trace_id'] = str(time.time_ns())
 
     # 2. Log that the event was received (INFO level)
     logger.info(f"Received 'Access Check' event - user_id : {body['user_id']} | trace_id {body['trace_id']}")
