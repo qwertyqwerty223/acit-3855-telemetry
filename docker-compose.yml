@@ -1,0 +1,10 @@
+services:
+  db:
+    image: mysql
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: 1
+      MYSQL_USER: skibidi
+      MYSQL_PASSWORD: helpme
+      MYSQL_DATABASE: events
+    ports:
+      - 3306:3306

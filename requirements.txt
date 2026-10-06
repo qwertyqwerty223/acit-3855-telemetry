@@ -4,3 +4,5 @@ swagger-ui-bundle>=1.1.0
 httpx2>=2.13.1
 requests
 sqlalchemy
+mysqlclient
+pyyaml

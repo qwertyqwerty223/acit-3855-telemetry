@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models import LoginEvent, AccessCheck
 
-ENGINE = create_engine("sqlite:///events.sqlite")
+ENGINE = create_engine("mysql://skibidi:helpme@127.0.0.1:3306/events")
 
 def make_session():
     return sessionmaker(bind=ENGINE)()
@@ -19,7 +19,8 @@ def login_event(body):
         failed_attempts=body['failed_attempts'],
         timestamp=body['timestamp'],
         ip_address=body.get('ip_address'),
-        status=body.get('status')
+        status=body.get('status'),
+        trace_id=str(body['trace_id'])
     )
     
     session.add(event)
@@ -37,7 +38,8 @@ def access_check(body):
         privilege_level=body['privilege_level'],
         timestamp=body['timestamp'],
         resource_path=body['resource_path'],
-        access_granted=body['access_granted']
+        access_granted=body['access_granted'],
+        trace_id=str(body['trace_id'])
     )
     
     session.add(event)

@@ -1,7 +1,8 @@
 from sqlalchemy import create_engine
 from models import Base
 
-ENGINE = create_engine("sqlite:///events.sqlite")
+ENGINE = create_engine("mysql://skibidi:helpme@127.0.0.1:3306/events")
+
 
 def drop_tables():
     print("Dropping tables...")

@@ -45,6 +45,7 @@ components:
         - user_id
         - failed_attempts
         - timestamp
+        - trace_id
       properties:
         user_id:
           type: string
@@ -69,6 +70,10 @@ components:
           description: SUCCESS or FAILURE
           enum: ["SUCCESS", "FAILURE"]
           example: "FAILURE"
+        trace_id:
+          type: string
+          description: "for tracking events"
+          example: "1728169999000000000"
 
     AccessCheck:
       type: object
@@ -78,6 +83,7 @@ components:
         - timestamp
         - resource_path
         - access_granted
+        - trace_id
       properties:
         user_id:
           type: string
@@ -104,3 +110,7 @@ components:
           type: boolean
           description: true or false
           example: false
+        trace_id:
+          type: string
+          description: "for tracking events"
+          example: "1728169999000000000"

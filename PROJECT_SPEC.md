@@ -28,6 +28,7 @@ Collects and audits real-time user login and access-control events to monitor su
 | `timestamp` * | `string (date-time)` | Event recording time (ISO 8601) |
 | `ip_address` | `string` | Client IP address |
 | `status` | `string` | `SUCCESS` or `FAILURE` |
+| `trace_id` | `string` | Unique tracking ID across microservices |
 
 #### Event 2: Access Check (`POST /auth/access-check`)
 
@@ -38,6 +39,7 @@ Collects and audits real-time user login and access-control events to monitor su
 | `timestamp` * | `string (date-time)` | Event recording time (ISO 8601) |
 | `resource_path` | `string` | Target endpoint (e.g., `/admin/finance`) |
 | `access_granted` | `boolean` | `true` or `false` |
+| `trace_id` | `string` | Unique tracking ID across microservices |
 
 *\* Meets the 3 required lab properties: identifier, numeric metric, and timestamp.*
 
@@ -52,3 +54,9 @@ Collects and audits real-time user login and access-control events to monitor su
   ```
 
 - **Swagger UI:** `http://localhost:8080/ui/`
+
+## Lab 4: Database & Logging Infrastructure
+
+- **Database**: Migrated from SQLite to a Dockerized MySQL database container on port `3306`.
+- **Tracing**: Injects a unique `trace_id` into every incoming event at the receiver boundary before forwarding it to downstream microservices. This allows events to be tracked throughout their entire lifecycle.
+- **Logging**: Configured centralized logging (`log_conf.yml`) to log incoming events (INFO level) and inter-service HTTP responses (DEBUG level) simultaneously to the console and to an `app.log` file.

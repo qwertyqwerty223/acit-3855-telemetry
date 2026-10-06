@@ -10,6 +10,7 @@ class LoginEvent(Base):
 
     id = mapped_column(Integer, primary_key=True)
     user_id = mapped_column(String(50), nullable=False)
+    trace_id = mapped_column(String(100), nullable=False)
     failed_attempts = mapped_column(Integer, nullable=False)
     timestamp = mapped_column(String(50), nullable=False)
     ip_address = mapped_column(String(50))
@@ -21,6 +22,7 @@ class AccessCheck(Base):
 
     id = mapped_column(Integer, primary_key=True)
     user_id = mapped_column(String(50), nullable=False)
+    trace_id = mapped_column(String(100), nullable=False)
     privilege_level = mapped_column(Integer, nullable=False)
     timestamp = mapped_column(String(50), nullable=False)
     resource_path = mapped_column(String(100), nullable=False)
