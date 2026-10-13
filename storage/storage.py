@@ -3,7 +3,7 @@ import uvicorn
 from connexion import NoContent
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from models import LoginEvent, AccessCheck
+from models import LoginEvent, AccessCheck, Base
 import logging
 import logging.config
 import yaml
@@ -60,6 +60,25 @@ def access_check(body):
     logger.debug(f"Stored event 'Access Check' with a trace id of {body['trace_id']}")
 
     return NoContent, 201
+
+def get_status():
+    """Return health status and count of recorded events."""
+    session = make_session()
+    num_logins = session.query(LoginEvent).count()
+    num_access_checks = session.query(AccessCheck).count()
+    session.close()
+
+    return {
+        "num_logins": num_logins,
+        "num_access_checks": num_access_checks
+    }, 200
+
+def reset_database():
+    """Drop and recreate all database tables."""
+    Base.metadata.drop_all(ENGINE)
+    Base.metadata.create_all(ENGINE)
+    logger.info("Database reset: dropped and recreated tables.")
+    return NoContent, 200
 
 app = connexion.AsyncApp(__name__, specification_dir='')
 app.add_api("storage.yaml", strict_validation=True, validate_responses=True)
