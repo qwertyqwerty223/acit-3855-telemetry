@@ -25,7 +25,7 @@ def login_event(body):
     # 2. Log that the event was received (INFO level)
     logger.info(f"Received 'login' event - user_id : {body['user_id']} | trace_id {body['trace_id']}")
     try:
-        response = requests.post(f"{STORAGE_URL}/auth/login", json=body)
+        response = requests.post(f"{STORAGE_URL}/auth/login", json=body, timeout=5)
 
         # 3. Log the response from storage (DEBUG level)
         logger.debug(f"Response for login event (trace_id: {body['trace_id']}) has status {response.status_code}")
@@ -44,7 +44,7 @@ def access_check(body):
     # 2. Log that the event was received (INFO level)
     logger.info(f"Received 'Access Check' event - user_id : {body['user_id']} | trace_id {body['trace_id']}")
     try:
-        response = requests.post(f"{STORAGE_URL}/auth/access-check", json=body)
+        response = requests.post(f"{STORAGE_URL}/auth/access-check", json=body, timeout=5)
 
         # 3. Log the response from storage (DEBUG level)
         logger.debug(f"Response for Access Check event (trace_id: {body['trace_id']}) has status {response.status_code}")

@@ -21,3 +21,5 @@ events.json
 *.jtl
 jmeter.log
 report/
+*.log
+app.log
