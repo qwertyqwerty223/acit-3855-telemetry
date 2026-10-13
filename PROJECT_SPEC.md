@@ -48,17 +48,21 @@ Collects and audits real-time user login and access-control events to monitor su
 ## Quick Reference Commands
 
 - **Run Receiver (Port 8080):**
+
   ```bash
   cd receiver
   uvicorn receiver:app --reload --reload-include receiver.yaml --port 8080
   ```
+
   Swagger UI: `http://localhost:8080/ui/`
 
 - **Run Storage (Port 8090):**
+
   ```bash
   cd storage
   uvicorn storage:app --reload --reload-include storage.yaml --port 8090
   ```
+
   Swagger UI: `http://localhost:8090/ui/`
 
 ## Lab 4: Database & Logging Infrastructure
