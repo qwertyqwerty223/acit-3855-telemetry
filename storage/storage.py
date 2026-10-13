@@ -22,19 +22,20 @@ def make_session():
 def login_event(body):
     """Handle incoming login events by storing them in the DB."""
     session = make_session()
-    
-    event = LoginEvent(
-        user_id=body['user_id'],
-        failed_attempts=body['failed_attempts'],
-        timestamp=body['timestamp'],
-        ip_address=body.get('ip_address'),
-        status=body.get('status'),
-        trace_id=str(body['trace_id'])
-    )
-    
-    session.add(event)
-    session.commit()
-    session.close()
+    try:
+        event = LoginEvent(
+            user_id=body['user_id'],
+            failed_attempts=body['failed_attempts'],
+            timestamp=body['timestamp'],
+            ip_address=body.get('ip_address'),
+            status=body.get('status'),
+            trace_id=str(body['trace_id'])
+        )
+        
+        session.add(event)
+        session.commit()
+    finally:
+        session.close()
 
     logger.debug(f"Stored event 'login' with a trace id of {body['trace_id']}")
     
@@ -43,19 +44,20 @@ def login_event(body):
 def access_check(body):
     """Handle incoming access checks by storing them in the DB."""
     session = make_session()
-    
-    event = AccessCheck(
-        user_id=body['user_id'],
-        privilege_level=body['privilege_level'],
-        timestamp=body['timestamp'],
-        resource_path=body['resource_path'],
-        access_granted=body['access_granted'],
-        trace_id=str(body['trace_id'])
-    )
-    
-    session.add(event)
-    session.commit()
-    session.close()
+    try:
+        event = AccessCheck(
+            user_id=body['user_id'],
+            privilege_level=body['privilege_level'],
+            timestamp=body['timestamp'],
+            resource_path=body['resource_path'],
+            access_granted=body['access_granted'],
+            trace_id=str(body['trace_id'])
+        )
+        
+        session.add(event)
+        session.commit()
+    finally:
+        session.close()
     
     logger.debug(f"Stored event 'Access Check' with a trace id of {body['trace_id']}")
 
@@ -64,9 +66,11 @@ def access_check(body):
 def get_status():
     """Return health status and count of recorded events."""
     session = make_session()
-    num_logins = session.query(LoginEvent).count()
-    num_access_checks = session.query(AccessCheck).count()
-    session.close()
+    try:
+        num_logins = session.query(LoginEvent).count()
+        num_access_checks = session.query(AccessCheck).count()
+    finally:
+        session.close()
 
     return {
         "num_logins": num_logins,
