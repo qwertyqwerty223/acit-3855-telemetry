@@ -36,6 +36,24 @@ paths:
           description: Looks good! I've accepted your data
         '400':
           description: invalid input, object invalid
+  /status:
+    get:
+      summary: Service health check and event record counts
+      operationId: storage.get_status
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/statusCheck'
+  /reset:
+    post:
+      summary: Reset the database by dropping and recreating tables
+      operationId: storage.reset_database
+      responses:
+        '200':
+          description: Database reset successfully
 
 components:
   schemas:
@@ -114,3 +132,13 @@ components:
           type: string
           description: "for tracking events"
           example: "1728169999000000000"
+
+    statusCheck:
+      type: object
+      properties:
+        num_logins:
+          type: integer
+          example: 50
+        num_access_checks:
+          type: integer
+          example: 50
