@@ -15,7 +15,10 @@ with open('log_conf.yml', 'r') as f:
 
 logger = logging.getLogger('receiver')
 
-STORAGE_SERVICE_URL = os.getenv("STORAGE_SERVICE_URL", "http://localhost:8090")
+STORAGE_SERVICE_URL = os.getenv("STORAGE_SERVICE_URL")
+if not STORAGE_SERVICE_URL:
+    logger.error("FATAL: STORAGE_SERVICE_URL environment variable is not set!")
+    raise RuntimeError("STORAGE_SERVICE_URL environment variable is required.")
 
 def login_event(body):
     """Handle incoming login events and forward to storage."""
