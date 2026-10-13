@@ -1,8 +1,14 @@
 from sqlalchemy import create_engine
 from models import Base
+import os
+import sys
 
-ENGINE = create_engine("mysql://skibidi:helpme@127.0.0.1:3306/events")
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    print("FATAL: DATABASE_URL environment variable is not set!", file=sys.stderr)
+    sys.exit(1)
 
+ENGINE = create_engine(DATABASE_URL)
 
 def drop_tables():
     print("Dropping tables...")

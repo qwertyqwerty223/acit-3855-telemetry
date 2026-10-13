@@ -55,7 +55,7 @@ def access_check(body):
         logger.error(f"Error communicating with storage service: {e}")
         return NoContent, 500
 
-def get_status(body):
+def get_status():
     """Healthcheck endpoint."""
     return NoContent, 200
 

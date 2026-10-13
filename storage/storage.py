@@ -7,6 +7,7 @@ from models import LoginEvent, AccessCheck, Base
 import logging
 import logging.config
 import yaml
+import os
 
 with open('log_conf.yml', 'r') as f:
     log_config = yaml.safe_load(f.read())
@@ -14,7 +15,12 @@ with open('log_conf.yml', 'r') as f:
 
 logger = logging.getLogger('storage')
 
-ENGINE = create_engine("mysql://skibidi:helpme@127.0.0.1:3306/events")
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    logger.error("FATAL: DATABASE_URL environment variable is not set!")
+    raise RuntimeError("DATABASE_URL environment variable is required.")
+
+ENGINE = create_engine(DATABASE_URL)
 
 def make_session():
     return sessionmaker(bind=ENGINE)()

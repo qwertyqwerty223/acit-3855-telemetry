@@ -23,3 +23,7 @@ jmeter.log
 report/
 *.log
 app.log
+
+# Environment & Secrets
+.env
+*.env
