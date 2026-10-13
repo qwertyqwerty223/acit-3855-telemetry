@@ -21,6 +21,7 @@ if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL environment variable is required.")
 
 ENGINE = create_engine(DATABASE_URL)
+Base.metadata.create_all(ENGINE)
 
 def make_session():
     return sessionmaker(bind=ENGINE)()

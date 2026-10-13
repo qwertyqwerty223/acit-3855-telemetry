@@ -6,15 +6,36 @@ services:
       MYSQL_USER: skibidi
       MYSQL_PASSWORD: helpme
       MYSQL_DATABASE: events
-    ports:
-      - 3306:3306
-  
+    healthcheck:
+      test: ["CMD", "mysqladmin", "-u", "skibidi", "-phelpme", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  storage:
+    build:
+      context: storage
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=mysql://skibidi:helpme@db:3306/events
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://storage:8090/status"]
+      interval: 5s
+      timeout: 1s
+      retries: 5
+
   receiver:
     build:
       context: receiver
       dockerfile: Dockerfile
     environment:
       - STORAGE_SERVICE_URL=http://storage:8090
+    depends_on:
+      storage:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://receiver:8080/status"]
       interval: 5s
