@@ -6,6 +6,7 @@ import time
 import logging
 import logging.config
 import yaml
+import os
 
 # for use the log_conf.yml file to start logging events
 with open('log_conf.yml', 'r') as f:
@@ -14,7 +15,7 @@ with open('log_conf.yml', 'r') as f:
 
 logger = logging.getLogger('receiver')
 
-STORAGE_URL = "http://localhost:8090"
+STORAGE_SERVICE_URL = os.getenv("STORAGE_SERVICE_URL", "http://localhost:8090")
 
 def login_event(body):
     """Handle incoming login events and forward to storage."""
@@ -25,7 +26,7 @@ def login_event(body):
     # 2. Log that the event was received (INFO level)
     logger.info(f"Received 'login' event - user_id : {body['user_id']} | trace_id {body['trace_id']}")
     try:
-        response = requests.post(f"{STORAGE_URL}/auth/login", json=body, timeout=5)
+        response = requests.post(f"{STORAGE_SERVICE_URL}/auth/login", json=body, timeout=5)
 
         # 3. Log the response from storage (DEBUG level)
         logger.debug(f"Response for login event (trace_id: {body['trace_id']}) has status {response.status_code}")
@@ -44,7 +45,7 @@ def access_check(body):
     # 2. Log that the event was received (INFO level)
     logger.info(f"Received 'Access Check' event - user_id : {body['user_id']} | trace_id {body['trace_id']}")
     try:
-        response = requests.post(f"{STORAGE_URL}/auth/access-check", json=body, timeout=5)
+        response = requests.post(f"{STORAGE_SERVICE_URL}/auth/access-check", json=body, timeout=5)
 
         # 3. Log the response from storage (DEBUG level)
         logger.debug(f"Response for Access Check event (trace_id: {body['trace_id']}) has status {response.status_code}")
@@ -53,6 +54,10 @@ def access_check(body):
     except requests.exceptions.RequestException as e:
         logger.error(f"Error communicating with storage service: {e}")
         return NoContent, 500
+
+def get_status(body):
+    """Healthcheck endpoint."""
+    return NoContent, 200
 
 # Initialize the Connexion application
 app = connexion.AsyncApp(__name__, specification_dir='')

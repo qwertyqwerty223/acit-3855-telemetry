@@ -36,6 +36,13 @@ paths:
           description: Looks good! I've accepted your data
         '400':
           description: invalid input, object invalid
+  /status:
+    get:
+      summary: service health check
+      operationId: receiver.get_status
+      responses:
+        '200':
+          description: Service is healthy
 
 components:
   schemas:

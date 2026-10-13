@@ -8,3 +8,17 @@ services:
       MYSQL_DATABASE: events
     ports:
       - 3306:3306
+  
+  receiver:
+    build:
+      context: receiver
+      dockerfile: Dockerfile
+    environment:
+      - STORAGE_SERVICE_URL=http://storage:8090
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://receiver:8080/status"]
+      interval: 5s
+      timeout: 1s
+      retries: 5
+    ports:
+      - 8080:8080
