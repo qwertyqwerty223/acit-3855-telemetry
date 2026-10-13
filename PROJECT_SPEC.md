@@ -50,26 +50,31 @@ Collects and audits real-time user login and access-control events to monitor su
 ### Running with Docker Compose (Recommended)
 
 - **Start entire platform:**
+
   ```bash
   docker compose up -d --build
   ```
 
 - **Check container health & status:**
+
   ```bash
   docker compose ps
   ```
 
 - **Stream live logs across all services:**
+
   ```bash
   docker compose logs -f
   ```
 
 - **Stop all services:**
+
   ```bash
   docker compose down
   ```
 
 - **Run JMeter Load Tests:**
+
   ```bash
   ./run_jmeter.sh 10 5
   ```
@@ -81,12 +86,14 @@ Collects and audits real-time user login and access-control events to monitor su
 ### Running Standalone for Local Development (Alternative)
 
 - **Run Receiver (Port 8080):**
+
   ```bash
   cd receiver
   uvicorn receiver:app --reload --reload-include receiver.yaml --port 8080
   ```
 
 - **Run Storage (Port 8090):**
+
   ```bash
   cd storage
   uvicorn storage:app --reload --reload-include storage.yaml --port 8090
