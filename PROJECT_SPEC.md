@@ -79,7 +79,22 @@ Collects and audits real-time user login and access-control events to monitor su
   ./run_jmeter.sh 10 5
   ```
 
-- **Public Swagger UI:** `http://localhost:8080/ui/`
+- **Inspect Aggregate Statistics:**
+
+  ```bash
+  curl http://localhost:8100/stats
+  ```
+
+- **Reset Database & Statistics:**
+
+  ```bash
+  docker compose exec storage curl -X POST http://storage:8090/reset
+  docker compose exec redis redis-cli del stats
+  ```
+
+- **Public Swagger UIs:**
+  - Receiver UI: `http://localhost:8080/ui/`
+  - Processing UI: `http://localhost:8100/ui/`
 
 ---
 
@@ -116,36 +131,62 @@ Collects and audits real-time user login and access-control events to monitor su
 
 - **`storage` (Port 8090):**
   - Connects to MySQL using SQLAlchemy and stores event records (`LoginEvent`, `AccessCheck`).
+  - Generates microsecond-resolution timestamps via `DATETIME(fsp=6)` to prevent event loss during concurrency spikes.
   - Automatically creates tables on startup if they don't exist.
   - **Endpoints:**
     - `POST /auth/login` — Persists login event to MySQL `login_event` table.
     - `POST /auth/access-check` — Persists access check to MySQL `access_check` table.
+    - `GET /auth/login?after=<timestamp>` — Retrieves login events recorded after the specified ISO timestamp.
+    - `GET /auth/access-check?after=<timestamp>` — Retrieves access check events recorded after the specified ISO timestamp.
     - `GET /status` — Returns service health and record counts (`num_logins`, `num_access_checks`).
     - `POST /reset` — Drops and recreates all database tables.
 
 - **`db` (Port 3306 - MySQL):**
   - MySQL database container running on the internal Docker network.
 
+- **`redis` (Port 6379 - Redis):**
+  - High-performance in-memory key-value data store used to decouple data processing from API serving.
+  - Configured with Append-Only File (AOF) disk persistence (`--appendonly yes --appendfsync everysec`) and a named volume (`redis_data`) to prevent state loss across restarts.
+
+- **`processing-worker` (Background Daemon):**
+  - Standalone Python daemon running a continuous polling loop every 5 seconds.
+  - Queries `storage:8090` for newly recorded event deltas (`?after=...`).
+  - Computes cumulative event counts (`total_login_events`, `total_access_checks`) and metric maximums (`max_failed_attempts`, `max_privilege_level`).
+  - Saves the updated state JSON string to Redis.
+
+- **`processing` (Port 8100 - API Service):**
+  - Lightweight Connexion / Uvicorn REST API.
+  - Uses an ASGI Lifespan manager (`@asynccontextmanager`) to maintain a persistent Redis connection pool.
+  - **Endpoints:**
+    - `GET /stats` — Returns aggregate security statistics from Redis.
+
 ### 2. Networking & Docker Compose
 
-- All three services run in Docker containers defined in `docker-compose.yml`.
-- **Port Exposure:** Only `receiver` (8080) is mapped to the host machine. `storage` (8090) and `db` (3306) are only accessible within the internal Docker network.
-- **Startup Order:**
-  - `db` runs a healthcheck (`mysqladmin ping`).
-  - `storage` waits for `db` to be healthy before starting.
-  - `receiver` waits for `storage` to be healthy before starting.
+- All services run in Docker containers defined in `docker-compose.yml`.
+- **Port Exposure:** Only `receiver` (8080) and `processing` (8100) are mapped to the host machine. `storage` (8090), `db` (3306), `redis` (6379), and `processing-worker` are accessible only within the internal Docker network.
+- **Startup Order & Health Dependencies:**
+  - `db` runs healthcheck (`mysqladmin ping`).
+  - `storage` starts when `db` is healthy (`curl http://storage:8090/status`).
+  - `redis` runs healthcheck (`redis-cli ping`).
+  - `receiver` starts when `storage` is healthy (`curl http://receiver:8080/status`).
+  - `processing-worker` starts when both `storage` and `redis` are healthy.
+  - `processing` starts when `redis` is healthy (`curl http://processing:8100/stats`).
 
 ### 3. Configuration & Security
 
 - **Environment Variables:**
-  - `receiver`: Reads `STORAGE_SERVICE_URL` from the environment. Throws an error and halts if not set.
-  - `storage`: Reads `DATABASE_URL` from the environment. Throws an error and halts if not set.
+  - `receiver`: Reads `STORAGE_SERVICE_URL`.
+  - `storage`: Reads `DATABASE_URL`.
+  - `processing-worker`: Reads `STORAGE_SERVICE_URL`, `REDIS_URL`, and `POLL_INTERVAL`.
+  - `processing`: Reads `REDIS_URL`.
 - **Timeouts & Connection Handling:**
   - `receiver`: All outgoing HTTP requests include an explicit 5-second timeout.
+  - `processing-worker`: 5-second timeout on storage queries.
   - `storage`: Database sessions are closed in `finally` blocks to prevent leaked connections.
+  - `processing`: Persistent Redis connection pool managed via ASGI Lifespan.
 - **Ignored Files:** `.env` and `*.log` files are excluded in `.gitignore`.
 
 ### 4. Logging & Tracing
 
 - **Tracing:** `receiver` adds a unique `trace_id` to each event before sending it to `storage`. Both services record this ID in their logs and database entries.
-- **Logging:** Configured in `log_conf.yml`. Writes `DEBUG`/`INFO` logs to both the terminal and `app.log`.
+- **Logging:** Configured in `log_conf.yml` across services, writing `DEBUG`/`INFO` logs to both the terminal/Docker logs and `app.log`.
