@@ -1,6 +1,7 @@
 from datetime import datetime, UTC
 from sqlalchemy.orm import DeclarativeBase, mapped_column
-from sqlalchemy import Integer, String, Boolean, DateTime
+from sqlalchemy import Integer, String, Boolean
+from sqlalchemy.dialects.mysql import DATETIME
 
 class Base(DeclarativeBase):
     pass
@@ -15,8 +16,8 @@ class LoginEvent(Base):
     timestamp = mapped_column(String(50), nullable=False)
     ip_address = mapped_column(String(50))
     status = mapped_column(String(20))
-    # DateTime(6) provides micro-second precision
-    recorded_timestamp = mapped_column(DateTime(6), default=lambda: datetime.now(UTC))
+    # DATETIME(fsp=6) provides microsecond precision in MySQL
+    recorded_timestamp = mapped_column(DATETIME(fsp=6), default=lambda: datetime.now(UTC))
 
     def to_dict(self):
         """Convert model instance to a dictionary for API responses."""
@@ -40,7 +41,8 @@ class AccessCheck(Base):
     timestamp = mapped_column(String(50), nullable=False)
     resource_path = mapped_column(String(100), nullable=False)
     access_granted = mapped_column(Boolean, nullable=False)
-    recorded_timestamp = mapped_column(DateTime(6), default=lambda: datetime.now(UTC))
+    # DATETIME(fsp=6) provides microsecond precision in MySQL
+    recorded_timestamp = mapped_column(DATETIME(fsp=6), default=lambda: datetime.now(UTC))
 
     def to_dict(self):
         """Convert model instance to a dictionary for API responses."""
