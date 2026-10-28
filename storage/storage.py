@@ -4,6 +4,7 @@ from connexion import NoContent
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models import LoginEvent, AccessCheck, Base
+from datetime import datetime, UTC
 import logging
 import logging.config
 import yaml
@@ -69,6 +70,67 @@ def access_check(body):
     logger.debug(f"Stored event 'Access Check' with a trace id of {body['trace_id']}")
 
     return NoContent, 201
+
+def get_login_events(after=None):
+    """Get all login events after the specified timestamp in the 'After' param. Return all if timestamp is not given."""
+    session = make_session()
+    try:
+        query = session.query(LoginEvent)
+
+        if after:
+            after_dt = datetime.fromisoformat(after.replace("Z", "+00:00"))
+
+            if after_dt.tzinfo is not None:
+                after_dt = after_dt.astimezone(UTC).replace(tzinfo=None)
+
+            query = query.filter(LoginEvent.recorded_timestamp > after_dt)
+
+        events = query.all()
+        logger.debug(f"Found {len(events)} login events after {after}")
+        arr = [event.to_dict() for event in events]
+
+        return arr, 200
+
+    except ValueError as e:
+        logger.error(f"Invalid timestamp format for after parameter: {after} ({e})")
+        return_message = {
+            "message": f"Invalid timestamp format: {after}"
+        }
+        return return_message, 400
+
+    finally:
+        session.close()        
+
+def get_access_checks(after=None):
+    """Get all access checks after the specified timestamp in the 'After' param. Return all if timestamp is not given."""
+    session = make_session()
+    try:
+        query = session.query(AccessCheck)
+
+        if after:
+            after_dt = datetime.fromisoformat(after.replace("Z", "+00:00"))
+
+            if after_dt.tzinfo is not None:
+                after_dt = after_dt.astimezone(UTC).replace(tzinfo=None)
+
+            query = query.filter(AccessCheck.recorded_timestamp > after_dt)
+
+        events = query.all()
+        logger.debug(f"Found {len(events)} Access Checks after {after}")
+        arr = [event.to_dict() for event in events]
+
+        return arr, 200
+
+    except ValueError as e:
+        logger.error(f"Invalid timestamp format for after parameter: {after} ({e})")
+        return_message = {
+            "message": f"Invalid timestamp format: {after}"
+        }
+        return return_message, 400
+
+    finally:
+        session.close()        
+
 
 def get_status():
     """Return health status and count of recorded events."""
