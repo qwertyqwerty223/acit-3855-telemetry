@@ -43,3 +43,46 @@ services:
       retries: 5
     ports:
       - 8080:8080
+  
+  redis:
+    image: redis:alpine
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+  
+  processing-worker:
+    build:
+      context: processing
+      dockerfile: Dockerfile.worker
+    environment:
+      - STORAGE_SERVICE_URL=http://storage:8090
+      - REDIS_URL=redis://redis:6379
+      - POLL_INTERVAL=5
+    depends_on:
+      storage:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+  processing:
+    build:
+      context: processing
+      dockerfile: Dockerfile.service
+    environment:
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://processing:8100/stats"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+    ports:
+      - 8100:8100
+volumes:
+  redis_data:
