@@ -1,24 +1,24 @@
-openapi: 3.3.0
+openapi: 3.0.0
 info:
   title: IAM Security Telemetry Processing & Stats Service
   version: 1.0.0
-  description: Provides aggregate security telemetry statistics compouted from storage events.
+  description: Provides aggregate security telemetry statistics computed from storage events.
 
 paths:
   /stats:
     get:
-    summary: Get aggregrate security telemetry statistics
-    operationId: app.get_stats
-    description: Returns cumulative event counts and metrics stored in Redis.
-    responses:
-      '200':
-        description: Aggregate statistics successfully retrieved
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ProcessingStats'
+      summary: Get aggregate security telemetry statistics
+      operationId: app.get_stats
+      description: Returns cumulative event counts and metrics stored in Redis.
+      responses:
+        '200':
+          description: Aggregate statistics successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessingStats'
 
-Components:
+components:
   schemas:
     ProcessingStats:
       type: object
@@ -48,6 +48,7 @@ Components:
         latest_recorded_timestamp:
           type: string
           format: date-time
+          nullable: true
           description: Timestamp of the most recent event record processed from storage
           example: "2026-10-28T00:30:00.123456Z"
         last_updated:
