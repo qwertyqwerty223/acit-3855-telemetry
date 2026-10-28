@@ -1,0 +1,57 @@
+openapi: 3.3.0
+info:
+  title: IAM Security Telemetry Processing & Stats Service
+  version: 1.0.0
+  description: Provides aggregate security telemetry statistics compouted from storage events.
+
+paths:
+  /stats:
+    get:
+    summary: Get aggregrate security telemetry statistics
+    operationId: app.get_stats
+    description: Returns cumulative event counts and metrics stored in Redis.
+    responses:
+      '200':
+        description: Aggregate statistics successfully retrieved
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcessingStats'
+
+Components:
+  schemas:
+    ProcessingStats:
+      type: object
+      required:
+        - total_login_events
+        - total_access_checks
+        - max_failed_attempts
+        - max_privilege_level
+        - last_updated
+      properties:
+        total_login_events:
+          type: integer
+          description: Cumulative count of login events processed
+          example: 120
+        total_access_checks:
+          type: integer
+          description: Cumulative count of access checks processed
+          example: 350
+        max_failed_attempts:
+          type: integer
+          description: Maximum failed attempts recorded across all logins
+          example: 5
+        max_privilege_level:
+          type: integer
+          description: Maximum privilege level requested across access checks
+          example: 3
+        latest_recorded_timestamp:
+          type: string
+          format: date-time
+          description: Timestamp of the most recent event record processed from storage
+          example: "2026-10-28T00:30:00.123456Z"
+        last_updated:
+          type: string
+          format: date-time
+          description: Timestamp when the statistics were last calculated and saved to Redis
+          example: "2026-10-28T00:30:05.654321Z"

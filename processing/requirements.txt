@@ -1,0 +1,5 @@
+connexion[uvicorn]
+connexion[swagger-ui]
+requests
+redis
+pyyaml
