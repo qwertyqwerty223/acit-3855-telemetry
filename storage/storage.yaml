@@ -21,6 +21,27 @@ paths:
           description: Looks good! I've accepted your data
         '400':
           description: invalid input, object invalid
+    get:
+      summary: Get all login attempts after a given timestamp
+      operationId: storage.get_login_events
+      description: Returns a list of login events after the specified timestamp.
+      parameters:
+        - in: query
+          name: after
+          schema:
+            type: string
+            format: date-time
+          description: Return login events after this timestamp
+      responses:
+      '200':
+        description: A list of login events
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+              $ref: '#/components/schemas/LoginEvent'
+
   /auth/access-check:
     post: 
       summary: Reports an access request for a protected file path
@@ -36,6 +57,27 @@ paths:
           description: Looks good! I've accepted your data
         '400':
           description: invalid input, object invalid
+    get:
+      summary: get access checks after a timestamp
+      operationId: storage.get_access_checks
+      description: Returns a list of access check events recorded after the specified timestamp
+      parameters:
+        - in: query
+          name: after
+          schema:
+            type: string
+            format: date-time
+          description: Return only access check events recorded after this timestamp
+      responses:
+        '200':
+          description: A list of access check events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AccessCheck'
+
   /status:
     get:
       summary: Service health check and event record counts
@@ -92,6 +134,11 @@ components:
           type: string
           description: "for tracking events"
           example: "1728169999000000000"
+        recorded_timestamp:
+          type: string
+          format: date-time
+          description: Timestamp when the even was recorded in the database
+          example: "2026-10-24T21:40:00.123456Z"
 
     AccessCheck:
       type: object
@@ -132,6 +179,11 @@ components:
           type: string
           description: "for tracking events"
           example: "1728169999000000000"
+        recorded_timestamp:
+          type: string
+          format: date-time
+          description: Timestamp when the even was recorded in the database
+          example: "2026-10-24T21:40:00.123456Z"
 
     statusCheck:
       type: object
