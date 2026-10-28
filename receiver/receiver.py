@@ -42,7 +42,7 @@ def login_event(body):
 def access_check(body):
     """Handle incoming access check events and forward to storage."""
 
-    # 1. Generate teh trace_id
+    # 1. Generate the trace_id
     body['trace_id'] = str(time.time_ns())
 
     # 2. Log that the event was received (INFO level)

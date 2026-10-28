@@ -23,6 +23,7 @@ jmeter.log
 report/
 *.log
 app.log
+lab-7-plan.md
 
 # Environment & Secrets
 .env
