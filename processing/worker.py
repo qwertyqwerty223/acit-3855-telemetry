@@ -15,7 +15,7 @@ with open("log_conf.yml", 'r') as f:
 
 logger = logging.getLogger("processing-worker")
 
-STORAGE_SERVICE_URL = os.env("STORAGE_SERVICE_URL", "http://storage:8090")
+STORAGE_SERVICE_URL = os.getenv("STORAGE_SERVICE_URL", "http://storage:8090")
 REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379")
 POLL_INTERVAL = int(os.getenv("POLL_INTERVAL", "5"))
 
@@ -29,7 +29,7 @@ DEFAULT_STATS = {
 }
 
 def get_redis_client():
-    return redis.Redis.from_url(REDIS_URL, decode_response=True)
+    return redis.Redis.from_url(REDIS_URL, decode_responses=True)
 
 def init_stats(client):
     """Ensure statistics exist in Redis."""
