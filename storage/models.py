@@ -27,7 +27,7 @@ class LoginEvent(Base):
             "timestamp": self.timestamp,
             "ip_address": self.ip_address,
             "status": self.status,
-            "record_timestamp": self.recorded_timestamp.isoformat() if self.recorded_timestamp else None
+            "recorded_timestamp": self.recorded_timestamp.isoformat() if self.recorded_timestamp else None
         }
 
 class AccessCheck(Base):
@@ -40,7 +40,7 @@ class AccessCheck(Base):
     timestamp = mapped_column(String(50), nullable=False)
     resource_path = mapped_column(String(100), nullable=False)
     access_granted = mapped_column(Boolean, nullable=False)
-    recorded_timestamp = mapped_column(DateTime, default=lambda: datetime.now(UTC))
+    recorded_timestamp = mapped_column(DateTime(6), default=lambda: datetime.now(UTC))
 
     def to_dict(self):
         """Convert model instance to a dictionary for API responses."""
