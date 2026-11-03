@@ -24,7 +24,8 @@ DEFAULT_STATS = {
     "total_access_checks": 0,
     "max_failed_attempts": 0,
     "max_privilege_level": 0,
-    "latest_recorded_timestamp": None,
+    "latest_login_timestamp": None,
+    "latest_access_check_timestamp": None,
     "last_updated": datetime.now(UTC).isoformat()
 }
 
@@ -65,11 +66,13 @@ def process_events():
             # 1. Fetch current statistics from Redis
             raw_stats = client.get("stats")
             stats = json.loads(raw_stats) if raw_stats else DEFAULT_STATS.copy()
-            last_timestamp = stats.get("latest_recorded_timestamp")
+            # last_timestamp = stats.get("latest_recorded_timestamp")
+            last_login_ts = stats.get("latest_login_timestamp")
+            last_check_ts = stats.get("latest_access_check_timestamp")
 
             # 2. Fetch new event batches from storage
-            new_logins = fetch_events("/auth/login", last_timestamp)
-            new_access_checks = fetch_events("/auth/access-check", last_timestamp)
+            new_logins = fetch_events("/auth/login", last_login_ts)
+            new_access_checks = fetch_events("/auth/access-check", last_check_ts)
             logger.info(
                 f"Received {len(new_logins)} new login events and "
                 f"{len(new_access_checks)} new access check events from storage."
@@ -91,13 +94,22 @@ def process_events():
                         stats["max_privilege_level"] = level
  
                 # Find the newest recorded timestamp among the new events
-                all_new_timestamps = [
-                    e["recorded_timestamp"]
-                    for e in (new_logins + new_access_checks)
-                    if e.get("recorded_timestamp")
-                ]
-                if all_new_timestamps:
-                    stats["latest_recorded_timestamp"] = max(all_new_timestamps)
+                if new_logins:
+                    stats["latest_login_timestamp"] = max(
+                        e["recorded_timestamp"] for e in new_logins if e.get("recorded_timetstamp")
+                    )
+
+                if new_access_checks:
+                    stats["latest_access_check_timestamp"] = max(
+                        e["recorded_timestamp"] for e in new_access_checks if e.get("recorded_timestamp")
+                    )
+                # all_new_timestamps = [
+                #     e["recorded_timestamp"]
+                #     for e in (new_logins + new_access_checks)
+                #     if e.get("recorded_timestamp")
+                # ]
+                # if all_new_timestamps:
+                #     stats["latest_recorded_timestamp"] = max(all_new_timestamps)
                 stats["last_updated"] = datetime.now(UTC).isoformat()
            
                 # 4. Save updated stats to Redis
