@@ -22,6 +22,7 @@ class LoginEvent(Base):
     def to_dict(self):
         """Convert model instance to a dictionary for API responses."""
         return {
+            "id": self.id,
             "user_id": self.user_id,
             "trace_id": self.trace_id,
             "failed_attempts": self.failed_attempts,
@@ -47,6 +48,7 @@ class AccessCheck(Base):
     def to_dict(self):
         """Convert model instance to a dictionary for API responses."""
         return {
+            "id": self.id,
             "user_id": self.user_id,
             "trace_id": self.trace_id,
             "privilege_level": self.privilege_level,

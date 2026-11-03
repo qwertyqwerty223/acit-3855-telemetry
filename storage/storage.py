@@ -71,7 +71,7 @@ def access_check(body):
 
     return NoContent, 201
 
-def get_login_events(after=None):
+def get_login_events(after=None, last_id=0):
     """Get all login events after the specified timestamp in the 'After' param. Return all if timestamp is not given."""
     session = make_session()
     try:
@@ -83,7 +83,10 @@ def get_login_events(after=None):
             if after_dt.tzinfo is not None:
                 after_dt = after_dt.astimezone(UTC).replace(tzinfo=None)
 
-            query = query.filter(LoginEvent.recorded_timestamp > after_dt)
+            query = query.filter(
+                (LoginEvent.recorded_timestamp > after_dt) |
+                ((LoginEvent.recorded_timestamp == after_dt) & (LoginEvent.id > int(last_id)))
+            )
 
         events = query.all()
         logger.debug(f"Found {len(events)} login events after {after}")
