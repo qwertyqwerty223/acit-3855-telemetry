@@ -45,12 +45,26 @@ components:
           type: integer
           description: Maximum privilege level requested across access checks
           example: 3
-        latest_recorded_timestamp:
+        latest_login_timestamp:
           type: string
           format: date-time
           nullable: true
-          description: Timestamp of the most recent event record processed from storage
+          description: Timestamp of the most recent login event processed from storage
           example: "2026-10-28T00:30:00.123456Z"
+        latest_access_check_timestamp:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp of the most recent access check event processed from storage
+          example: "2026-10-28T00:30:00.123456Z"
+        last_login_id:
+          type: integer
+          description: Database ID of the latest login event processed
+          example: 42
+        last_access_check_id:
+          type: integer
+          description: Database ID of the latest access check event processed
+          example: 35
         last_updated:
           type: string
           format: date-time

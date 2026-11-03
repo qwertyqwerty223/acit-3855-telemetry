@@ -26,6 +26,8 @@ DEFAULT_STATS = {
     "max_privilege_level": 0,
     "latest_login_timestamp": None,
     "latest_access_check_timestamp": None,
+    "last_login_id": 0,
+    "last_access_check_id": 0,
     "last_updated": datetime.now(UTC).isoformat()
 }
 
@@ -42,10 +44,13 @@ def init_stats(client):
     except redis.exceptions.RedisError as e:
         logger.warning(f"Could not connect to Redis on initialization: {e}")
 
-def fetch_events(endpoint, after_timestamp):
-    """Query storage service for events after a specific timestamp."""
+def fetch_events(endpoint, after_timestamp, last_id=0):
+    """Query storage service for events after a specific timestamp (with ID tie-breaker)."""
     url = f"{STORAGE_SERVICE_URL}{endpoint}"
-    params = {"after": after_timestamp} if after_timestamp else {}
+    params = {}
+    if after_timestamp:
+        params["after"] = after_timestamp
+        params["last_id"] = last_id
     response = requests.get(url, params=params, timeout=5)
     response.raise_for_status()
     return response.json()
@@ -66,13 +71,14 @@ def process_events():
             # 1. Fetch current statistics from Redis
             raw_stats = client.get("stats")
             stats = json.loads(raw_stats) if raw_stats else DEFAULT_STATS.copy()
-            # last_timestamp = stats.get("latest_recorded_timestamp")
             last_login_ts = stats.get("latest_login_timestamp")
+            last_login_id = stats.get("last_login_id", 0)
             last_check_ts = stats.get("latest_access_check_timestamp")
+            last_check_id = stats.get("last_access_check_id", 0)
 
             # 2. Fetch new event batches from storage
-            new_logins = fetch_events("/auth/login", last_login_ts)
-            new_access_checks = fetch_events("/auth/access-check", last_check_ts)
+            new_logins = fetch_events("/auth/login", last_login_ts, last_login_id)
+            new_access_checks = fetch_events("/auth/access-check", last_check_ts, last_check_id)
             logger.info(
                 f"Received {len(new_logins)} new login events and "
                 f"{len(new_access_checks)} new access check events from storage."
@@ -93,23 +99,24 @@ def process_events():
                     if level > stats["max_privilege_level"]:
                         stats["max_privilege_level"] = level
  
-                # Find the newest recorded timestamp among the new events
+                # Update login watermark and tie-breaker ID
                 if new_logins:
-                    stats["latest_login_timestamp"] = max(
-                        e["recorded_timestamp"] for e in new_logins if e.get("recorded_timetstamp")
+                    latest_login = max(
+                        new_logins,
+                        key=lambda e: (e.get("recorded_timestamp") or "", e.get("id") or 0)
                     )
+                    stats["latest_login_timestamp"] = latest_login.get("recorded_timestamp")
+                    stats["last_login_id"] = latest_login.get("id", 0)
 
+                # Update access check watermark and tie-breaker ID
                 if new_access_checks:
-                    stats["latest_access_check_timestamp"] = max(
-                        e["recorded_timestamp"] for e in new_access_checks if e.get("recorded_timestamp")
+                    latest_check = max(
+                        new_access_checks,
+                        key=lambda e: (e.get("recorded_timestamp") or "", e.get("id") or 0)
                     )
-                # all_new_timestamps = [
-                #     e["recorded_timestamp"]
-                #     for e in (new_logins + new_access_checks)
-                #     if e.get("recorded_timestamp")
-                # ]
-                # if all_new_timestamps:
-                #     stats["latest_recorded_timestamp"] = max(all_new_timestamps)
+                    stats["latest_access_check_timestamp"] = latest_check.get("recorded_timestamp")
+                    stats["last_access_check_id"] = latest_check.get("id", 0)
+
                 stats["last_updated"] = datetime.now(UTC).isoformat()
            
                 # 4. Save updated stats to Redis

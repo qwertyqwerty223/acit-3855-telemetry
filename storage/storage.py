@@ -104,7 +104,7 @@ def get_login_events(after=None, last_id=0):
     finally:
         session.close()        
 
-def get_access_checks(after=None):
+def get_access_checks(after=None, last_id=0):
     """Get all access checks after the specified timestamp in the 'After' param. Return all if timestamp is not given."""
     session = make_session()
     try:
@@ -116,7 +116,10 @@ def get_access_checks(after=None):
             if after_dt.tzinfo is not None:
                 after_dt = after_dt.astimezone(UTC).replace(tzinfo=None)
 
-            query = query.filter(AccessCheck.recorded_timestamp > after_dt)
+            query = query.filter(
+                (AccessCheck.recorded_timestamp > after_dt) |
+                ((AccessCheck.recorded_timestamp == after_dt) & (AccessCheck.id > int(last_id)))
+            )
 
         events = query.all()
         logger.debug(f"Found {len(events)} Access Checks after {after}")

@@ -42,7 +42,10 @@ def get_stats():
         "total_access_checks": 0,
         "max_failed_attempts": 0,
         "max_privilege_level": 0,
-        "latest_recorded_timestamp": None,
+        "latest_login_timestamp": None,
+        "latest_access_check_timestamp": None,
+        "last_login_id": 0,
+        "last_access_check_id": 0,
         "last_updated": datetime.now(UTC).isoformat()
     }
 

@@ -32,6 +32,12 @@ paths:
             type: string
             format: date-time
           description: Return login events after this timestamp
+        - in: query
+          name: last_id
+          schema:
+            type: integer
+            default: 0
+          description: Return events with ID greater than this if recorded_timestamp matches after
       responses:
         '200':
           description: A list of login events
@@ -68,6 +74,12 @@ paths:
             type: string
             format: date-time
           description: Return only access check events recorded after this timestamp
+        - in: query
+          name: last_id
+          schema:
+            type: integer
+            default: 0
+          description: Return events with ID greater than this if recorded_timestamp matches after
       responses:
         '200':
           description: A list of access check events
@@ -107,6 +119,10 @@ components:
         - timestamp
         - trace_id
       properties:
+        id:
+          type: integer
+          description: Unique database record identifier
+          example: 1
         user_id:
           type: string
           format: uuid
@@ -150,6 +166,10 @@ components:
         - access_granted
         - trace_id
       properties:
+        id:
+          type: integer
+          description: Unique database record identifier
+          example: 1
         user_id:
           type: string
           format: uuid
