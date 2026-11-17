@@ -25,6 +25,7 @@ report/
 app.log
 lab-7-plan.md
 PROJECT_DEFENSE.md
+report-*
 
 # Environment & Secrets
 .env
