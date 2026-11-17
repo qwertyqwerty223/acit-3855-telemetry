@@ -1,13 +1,17 @@
+import json
 import logging
 import logging.config
 import os
 import time
+from contextlib import asynccontextmanager
 
 import connexion
 import requests
 import uvicorn
 import yaml
-from connexion import NoContent
+from aiokafka import AIOKafkaProducer
+from aiokafka.errors import KafkaError
+from connexion import NoContent, request
 
 # for use the log_conf.yml file to start logging events
 with open("log_conf.yml", "r") as f:
@@ -16,61 +20,75 @@ with open("log_conf.yml", "r") as f:
 
 logger = logging.getLogger("receiver")
 
-STORAGE_SERVICE_URL = os.getenv("STORAGE_SERVICE_URL")
-if not STORAGE_SERVICE_URL:
-    logger.error("FATAL: STORAGE_SERVICE_URL environment variable is not set!")
-    raise RuntimeError("STORAGE_SERVICE_URL environment variable is required.")
+KAFKA_BROKER = os.getenv("KAFKA_BROKER", "redpanda:9092")
+KAFKA_TOPIC_LOGIN = os.getenv("KAFKA_TOPIC_LOGIN", "login")
+KAFKA_TOPIC_ACCESS = os.getenv("KAFKA_TOPIC_ACCESS", "accessChecks")
 
 
-def login_event(body):
-    """Handle incoming login events and forward to storage."""
+@asynccontextmanager
+async def lifespan(app):
+    producer = AIOKafkaProducer(bootstrap_servers=[KAFKA_BROKER])
 
-    # 1. Generate teh trace_id
-    body["trace_id"] = str(time.time_ns())
-
-    # 2. Log that the event was received (INFO level)
-    logger.info(
-        f"Received 'login' event - user_id : {body['user_id']} | trace_id {body['trace_id']}"
-    )
+    await producer.start()
     try:
-        response = requests.post(
-            f"{STORAGE_SERVICE_URL}/auth/login", json=body, timeout=5
-        )
-
-        # 3. Log the response from storage (DEBUG level)
-        logger.debug(
-            f"Response for login event (trace_id: {body['trace_id']}) has status {response.status_code}"
-        )
-
-        return NoContent, 201
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Error communicating with storage service: {e}")
-        return NoContent, 500
+        yield {"kafka": producer}
+    finally:
+        await producer.stop()
 
 
-def access_check(body):
-    """Handle incoming access check events and forward to storage."""
+async def login_event(body):
+    """Handle incoming login events and publish them to Kafka."""
 
     # 1. Generate the trace_id
     body["trace_id"] = str(time.time_ns())
 
     # 2. Log that the event was received (INFO level)
     logger.info(
-        f"Received 'Access Check' event - user_id : {body['user_id']} | trace_id {body['trace_id']}"
+        f"Received 'login' event - user_id : {body['user_id']} | trace_id {body['trace_id']}"
     )
+
+    # 3. Prepare Payload for kafka
+    payload = json.dumps(body)
+
     try:
-        response = requests.post(
-            f"{STORAGE_SERVICE_URL}/auth/access-check", json=body, timeout=5
+        # 4. Send and wait until Redpanda confirms it received the message
+        metadata = await request.state.kafka.send_and_wait(
+            KAFKA_TOPIC_LOGIN, payload.encode("utf-8")
         )
 
-        # 3. Log the response from storage (DEBUG level)
+        # 3. Log the response from kafka (DEBUG level)
         logger.debug(
-            f"Response for Access Check event (trace_id: {body['trace_id']}) has status {response.status_code}"
+            f"Publisohed login event to Kafka (trace_id: {body['trace_id']}) to partition {metadata.partition}, offset {metadata.offset}"
         )
 
         return NoContent, 201
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Error communicating with storage service: {e}")
+    except KafkaError as e:
+        logger.error(f"Error publishing to Kafka (trace_id: {body['trace_id']}): {e}")
+        return NoContent, 500
+
+
+async def access_check(body):
+    """Handle incoming access check events and publish them to Kafka."""
+
+    body["trace_id"] = str(time.time_ns())
+
+    logger.info(
+        f"Received 'Access Check' event - user_id : {body['user_id']} | trace_id {body['trace_id']}"
+    )
+
+    payload = json.dumps(body)
+
+    try:
+        metadata = await request.state.kafka.send_and_wait(
+            KAFKA_TOPIC_ACCESS, payload.encode("utf-8")
+        )
+        logger.debug(
+            f"Published access check event to Kafka (trace_id: {body['trace_id']}) "
+            f"to partition {metadata.partition}, offset {metadata.offset}"
+        )
+        return NoContent, 201
+    except KafkaError as e:
+        logger.error(f"Error publishing to Kafka (trace_id: {body['trace_id']}): {e}")
         return NoContent, 500
 
 
@@ -80,7 +98,7 @@ def get_status():
 
 
 # Initialize the Connexion application
-app = connexion.AsyncApp(__name__, specification_dir="")
+app = connexion.AsyncApp(__name__, specification_dir="", lifespan=lifespan)
 app.add_api("receiver.yaml", strict_validation=True, validate_responses=True)
 
 if __name__ == "__main__":

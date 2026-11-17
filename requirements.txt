@@ -6,3 +6,4 @@ requests
 sqlalchemy
 mysqlclient
 pyyaml
+aiokafka
