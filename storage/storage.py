@@ -27,50 +27,6 @@ Base.metadata.create_all(ENGINE)
 def make_session():
     return sessionmaker(bind=ENGINE)()
 
-def login_event(body):
-    """Handle incoming login events by storing them in the DB."""
-    session = make_session()
-    try:
-        event = LoginEvent(
-            user_id=body['user_id'],
-            failed_attempts=body['failed_attempts'],
-            timestamp=body['timestamp'],
-            ip_address=body.get('ip_address'),
-            status=body.get('status'),
-            trace_id=str(body['trace_id'])
-        )
-        
-        session.add(event)
-        session.commit()
-    finally:
-        session.close()
-
-    logger.debug(f"Stored event 'login' with a trace id of {body['trace_id']}")
-    
-    return NoContent, 201
-
-def access_check(body):
-    """Handle incoming access checks by storing them in the DB."""
-    session = make_session()
-    try:
-        event = AccessCheck(
-            user_id=body['user_id'],
-            privilege_level=body['privilege_level'],
-            timestamp=body['timestamp'],
-            resource_path=body['resource_path'],
-            access_granted=body['access_granted'],
-            trace_id=str(body['trace_id'])
-        )
-        
-        session.add(event)
-        session.commit()
-    finally:
-        session.close()
-    
-    logger.debug(f"Stored event 'Access Check' with a trace id of {body['trace_id']}")
-
-    return NoContent, 201
-
 def get_login_events(after=None, last_id=0):
     """Get all login events after the specified timestamp in the 'After' param. Return all if timestamp is not given."""
     session = make_session()
@@ -136,7 +92,6 @@ def get_access_checks(after=None, last_id=0):
 
     finally:
         session.close()        
-
 
 def get_status():
     """Return health status and count of recorded events."""

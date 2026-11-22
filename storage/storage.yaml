@@ -4,23 +4,7 @@ info:
   version: 1.0.0
 
 paths:
-  # There are two POST endpoints below
-  # each represents an event
-  /auth/login:                                      # This is a URL - an API endpoint
-    post:                                           # the HTTP method
-      summary: Reports a user login attempt
-      operationId: storage.login_event             # This refers to the python function being invoked
-      description: adds a login attempt reading
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LoginEvent'
-      responses:
-        '201':
-          description: Looks good! I've accepted your data
-        '400':
-          description: invalid input, object invalid
+  /auth/login:
     get:
       summary: Get all login attempts after a given timestamp
       operationId: storage.get_login_events
@@ -49,20 +33,6 @@ paths:
                   $ref: '#/components/schemas/LoginEvent'
 
   /auth/access-check:
-    post: 
-      summary: Reports an access request for a protected file path
-      operationId: storage.access_check
-      description: adds a access check reading
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AccessCheck'
-      responses:
-        '201':
-          description: Looks good! I've accepted your data
-        '400':
-          description: invalid input, object invalid
     get:
       summary: get access checks after a timestamp
       operationId: storage.get_access_checks

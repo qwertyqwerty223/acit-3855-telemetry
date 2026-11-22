@@ -1,0 +1,4 @@
+connexion[uvicorn,swagger-ui]
+aiokafka
+pyyaml
+uvicorn

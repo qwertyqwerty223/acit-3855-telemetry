@@ -37,17 +37,34 @@ services:
       timeout: 1s
       retries: 5
 
+  storage-worker:
+    build:
+      context: storage
+      dockerfile: Dockerfile.worker
+    environment:
+      - DATABASE_URL=mysql://skibidi:helpme@db:3306/events
+      - KAFKA_BROKER=redpanda:9092
+      - KAFKA_TOPIC_LOGIN=login
+      - KAFKA_TOPIC_ACCESS=accessChecks
+    depends_on:
+      db:
+        condition: service_healthy
+      redpanda:
+        condition: service_healthy
+
   receiver:
     build:
       context: receiver
       dockerfile: Dockerfile
     environment:
-      - STORAGE_SERVICE_URL=http://storage:8090
+      - KAFKA_BROKER=redpanda:9092
+      - KAFKA_TOPIC_LOGIN=login
+      - KAFKA_TOPIC_ACCESS=accessChecks
     depends_on:
-      storage:
+      redpanda:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://receiver:8080/status"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/status"]
       interval: 5s
       timeout: 1s
       retries: 5
@@ -144,6 +161,17 @@ services:
     image: docker.redpanda.com/redpandadata/redpanda:v26.1.10
     volumes:
       - redpanda:/var/lib/redpanda/data
+    ports:
+      - 19092:19092
+      - 18082:18082
+      - 18081:18081
+    healthcheck:
+      test:
+        ["CMD-SHELL", "rpk cluster health | grep -E 'Healthy:.+true' || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   redpanda-console:
     # the console is for inspecting and debugging the services using redpanda
