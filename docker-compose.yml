@@ -37,6 +37,21 @@ services:
       timeout: 1s
       retries: 5
 
+  storage-worker:
+    build:
+      context: storage
+      dockerfile: Dockerfile.worker
+    environment:
+      - DATABASE_URL=mysql://skibidi:helpme@db:3306/events
+      - KAFKA_BROKER=redpanda:9092
+      - KAFKA_TOPIC_LOGIN=login
+      - KAFKA_TOPIC_ACCESS=accessChecks
+    depends_on:
+      db:
+        condition: service_healthy
+      redpanda:
+        condition: service_healthy
+
   receiver:
     build:
       context: receiver
@@ -44,6 +59,7 @@ services:
     environment:
       - KAFKA_BROKER=redpanda:9092
       - KAFKA_TOPIC_LOGIN=login
+      - KAFKA_TOPIC_ACCESS=accessChecks
     depends_on:
       redpanda:
         condition: service_healthy

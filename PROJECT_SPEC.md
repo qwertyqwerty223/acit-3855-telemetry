@@ -92,9 +92,10 @@ Collects and audits real-time user login and access-control events to monitor su
   docker compose exec redis redis-cli del stats
   ```
 
-- **Public Swagger UIs:**
-  - Receiver UI: `http://localhost:8080/ui/`
-  - Processing UI: `http://localhost:8100/ui/`
+- **Public Web UIs:**
+  - Receiver Swagger UI: `http://localhost:8080/ui/`
+  - Processing Swagger UI: `http://localhost:8100/ui/`
+  - Redpanda Broker Console: `http://localhost:8085/`
 
 ---
 
@@ -123,19 +124,31 @@ Collects and audits real-time user login and access-control events to monitor su
 - **`receiver` (Port 8080):**
   - Receives and validates incoming events via OpenAPI (`receiver.yaml`).
   - Generates a `trace_id` for each event using `time.time_ns()`.
-  - Forwards events to the storage service via HTTP `POST` requests.
+  - Publishes events asynchronously to Redpanda (Kafka topics `login` and `accessChecks`) using an ASGI lifespan-managed `aiokafka.AIOKafkaProducer`.
   - **Endpoints:**
-    - `POST /auth/login` — Ingests login attempts, injects `trace_id`, and forwards to storage.
-    - `POST /auth/access-check` — Ingests authorization checks, injects `trace_id`, and forwards to storage.
+    - `POST /auth/login` — Ingests login attempts, injects `trace_id`, and publishes to `login` Kafka topic.
+    - `POST /auth/access-check` — Ingests authorization checks, injects `trace_id`, and publishes to `accessChecks` Kafka topic.
     - `GET /status` — Health check endpoint used by Docker healthchecks (returns `200 OK`).
 
+- **`redpanda` (Kafka Broker - Ports 9092 internal / 19092 external):**
+  - High-performance, Kafka-compatible message broker running in single-broker dev mode.
+  - Receives events from `receiver` and queues them reliably for consumers.
+
+- **`redpanda-console` (Port 8085):**
+  - Web UI for monitoring topics (`login`, `accessChecks`), partitions, consumer groups, and message offsets in real time.
+
+- **`storage-worker` (Background Event Consumer):**
+  - Standalone consumer daemon running `confluent-kafka` Consumer.
+  - Subscribes to `login` and `accessChecks` topics.
+  - Persists incoming events to MySQL database with SQLAlchemy.
+  - Performs manual offset commits only after successful DB transactions to ensure at-least-once delivery.
+  - Supports graceful shutdown on `SIGTERM`/`SIGINT`.
+
 - **`storage` (Port 8090):**
-  - Connects to MySQL using SQLAlchemy and stores event records (`LoginEvent`, `AccessCheck`).
-  - Generates microsecond-resolution timestamps via `DATETIME(fsp=6)` to prevent event loss during concurrency spikes.
+  - Read/query API connecting to MySQL using SQLAlchemy (`LoginEvent`, `AccessCheck`).
+  - Microsecond-resolution timestamps via `DATETIME(fsp=6)` prevent event loss during concurrency spikes.
   - Automatically creates tables on startup if they don't exist.
   - **Endpoints:**
-    - `POST /auth/login` — Persists login event to MySQL `login_event` table.
-    - `POST /auth/access-check` — Persists access check to MySQL `access_check` table.
     - `GET /auth/login?after=<timestamp>` — Retrieves login events recorded after the specified ISO timestamp.
     - `GET /auth/access-check?after=<timestamp>` — Retrieves access check events recorded after the specified ISO timestamp.
     - `GET /status` — Returns service health and record counts (`num_logins`, `num_access_checks`).
@@ -163,20 +176,23 @@ Collects and audits real-time user login and access-control events to monitor su
 ### 2. Networking & Docker Compose
 
 - All services run in Docker containers defined in `docker-compose.yml`.
-- **Port Exposure:** Only `receiver` (8080) and `processing` (8100) are mapped to the host machine. `storage` (8090), `db` (3306), `redis` (6379), and `processing-worker` are accessible only within the internal Docker network.
+- **Port Exposure:** Only `receiver` (8080), `processing` (8100), and `redpanda-console` (8085) are mapped to the host machine. `storage` (8090), `storage-worker`, `db` (3306), `redis` (6379), `redpanda` internal (9092), and `processing-worker` communicate across the internal Docker network.
 - **Startup Order & Health Dependencies:**
   - `db` runs healthcheck (`mysqladmin ping`).
   - `storage` starts when `db` is healthy (`curl http://storage:8090/status`).
   - `redis` runs healthcheck (`redis-cli ping`).
-  - `receiver` starts when `storage` is healthy (`curl http://receiver:8080/status`).
+  - `redpanda` runs healthcheck (`rpk cluster health`).
+  - `receiver` starts when `redpanda` is healthy.
+  - `storage-worker` starts when both `db` and `redpanda` are healthy.
   - `processing-worker` starts when both `storage` and `redis` are healthy.
   - `processing` starts when `redis` is healthy (`curl http://processing:8100/stats`).
 
 ### 3. Configuration & Security
 
 - **Environment Variables:**
-  - `receiver`: Reads `STORAGE_SERVICE_URL`.
+  - `receiver`: Reads `KAFKA_BROKER`, `KAFKA_TOPIC_LOGIN`, `KAFKA_TOPIC_ACCESS`.
   - `storage`: Reads `DATABASE_URL`.
+  - `storage-worker`: Reads `DATABASE_URL`, `KAFKA_BROKER`, `KAFKA_TOPIC_LOGIN`, `KAFKA_TOPIC_ACCESS`.
   - `processing-worker`: Reads `STORAGE_SERVICE_URL`, `REDIS_URL`, and `POLL_INTERVAL`.
   - `processing`: Reads `REDIS_URL`.
 - **Timeouts & Connection Handling:**
@@ -188,5 +204,5 @@ Collects and audits real-time user login and access-control events to monitor su
 
 ### 4. Logging & Tracing
 
-- **Tracing:** `receiver` adds a unique `trace_id` to each event before sending it to `storage`. Both services record this ID in their logs and database entries.
+- **Tracing:** `receiver` injects a unique `trace_id` (nanosecond timestamp) into each event payload before publishing to Kafka. Both `storage-worker` (saving to MySQL) and `storage` (serving GET endpoints) log and preserve this trace ID across microservice boundaries.
 - **Logging:** Configured in `log_conf.yml` across services, writing `DEBUG`/`INFO` logs to both the terminal/Docker logs and `app.log`.

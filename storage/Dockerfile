@@ -10,8 +10,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Install Python packages needed by the storage service
-RUN pip install connexion[flask] connexion[uvicorn] connexion[swagger-ui] sqlalchemy mysqlclient pyyaml
+# Install Python packages using requirements.txt
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy storage code and specifications into the container
 COPY . /app
