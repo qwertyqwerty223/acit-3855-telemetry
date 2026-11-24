@@ -37,27 +37,28 @@ async def lifespan(app):
 
 def get_stats():
     """Retrieve aggregate security telemetry statistics from Redis."""
-    default_stats = {
-        "total_login_events": 0,
-        "total_access_checks": 0,
-        "max_failed_attempts": 0,
-        "max_privilege_level": 0,
-        "latest_login_timestamp": None,
-        "latest_access_check_timestamp": None,
-        "last_login_id": 0,
-        "last_access_check_id": 0,
-        "last_updated": datetime.now(UTC).isoformat()
-    }
+
 
     try:
         redis_client = request.state.redis
         data = redis_client.get("stats")
-    except Exception as e:
-        logger.error(f"Error reading statistics from Redis: {e}")
-        return default_stats, 200
+    except redis.exceptions.RedisError as e:
+        logger.error(f"Redis unavailable while retrieving statistics: {e}")
+        return {"error": "Statistics temporarily unavailable"}, 503
 
     if not data:
         logger.info("No statistics found in Redis yet. Returning initial defaults.")
+        default_stats = {
+            "total_login_events": 0,
+            "total_access_checks": 0,
+            "max_failed_attempts": 0,
+            "max_privilege_level": 0,
+            "latest_login_timestamp": None,
+            "latest_access_check_timestamp": None,
+            "last_login_id": 0,
+            "last_access_check_id": 0,
+            "last_updated": datetime.now(UTC).isoformat()
+        }
         return default_stats, 200
 
     stats = json.loads(data)

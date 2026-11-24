@@ -17,9 +17,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProcessingStats'
+        '503':
+          description: Statistics service temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessingStatsDown'
+
 
 components:
   schemas:
+    ProcessingStatsDown:
+      type: object
+      properties:
+        error:
+          type: string
     ProcessingStats:
       type: object
       required:

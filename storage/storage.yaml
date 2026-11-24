@@ -31,6 +31,17 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/LoginEvent'
+        '400':
+          description: Invalid timestamp format
+        '503':
+          description: Database unavailable
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
 
   /auth/access-check:
     get:
@@ -59,6 +70,17 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/AccessCheck'
+        '400':
+          description: Invalid timestamp format
+        '503':
+          description: Database unavailable
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
 
   /status:
     get:
@@ -71,6 +93,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/statusCheck'
+        '503':
+          description: Database unavailable
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
   /reset:
     post:
       summary: Reset the database by dropping and recreating tables
@@ -78,6 +109,15 @@ paths:
       responses:
         '200':
           description: Database reset successfully
+        '503':
+          description: Database unavailable
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
 
 components:
   schemas:
@@ -109,10 +149,12 @@ components:
           example: "2026-09-22T10:33:36Z"
         ip_address:
           type: string
+          nullable: true
           description: Client IP address
           example: "192.168.1.105"
         status:
           type: string
+          nullable: true
           description: SUCCESS or FAILURE
           enum: ["SUCCESS", "FAILURE"]
           example: "FAILURE"

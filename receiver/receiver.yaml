@@ -21,6 +21,13 @@ paths:
           description: Looks good! I've accepted your data
         '400':
           description: invalid input, object invalid
+        '503':
+          description: Service temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorSchema'
+
   /auth/access-check:
     post: 
       summary: Reports an access request for a protected file path
@@ -36,6 +43,12 @@ paths:
           description: Looks good! I've accepted your data
         '400':
           description: invalid input, object invalid
+        '503':
+          description: Service temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorSchema'
   /status:
     get:
       summary: service health check
@@ -46,6 +59,12 @@ paths:
 
 components:
   schemas:
+    ErrorSchema:
+      type: object
+      properties:
+        error:
+          type: string
+
     LoginEvent:
       type: object
       required:
