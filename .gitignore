@@ -18,14 +18,17 @@ events.json
 .idea/
 *.swp
 *.sqlite
+# Logs
+*.log
+app.log
+
+# JMeter Reports & Logs
 *.jtl
 jmeter.log
 report/
-*.log
-app.log
-lab-7-plan.md
-PROJECT_DEFENSE.md
 report-*
+tests/reports/
+tests/*.jtl
 
 # Environment & Secrets
 .env
