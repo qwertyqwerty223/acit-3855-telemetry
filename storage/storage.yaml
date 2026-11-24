@@ -149,10 +149,12 @@ components:
           example: "2026-09-22T10:33:36Z"
         ip_address:
           type: string
+          nullable: true
           description: Client IP address
           example: "192.168.1.105"
         status:
           type: string
+          nullable: true
           description: SUCCESS or FAILURE
           enum: ["SUCCESS", "FAILURE"]
           example: "FAILURE"
