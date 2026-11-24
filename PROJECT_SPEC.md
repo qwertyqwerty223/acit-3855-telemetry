@@ -93,9 +93,12 @@ Collects and audits real-time user login and access-control events to monitor su
   ```
 
 - **Public Web UIs:**
+  - Grafana Telemetry Dashboard: `http://localhost:3000/` (admin/password)
+  - Prometheus Metrics UI: `http://localhost:9090/`
+  - Alloy Debugging Console: `http://localhost:12345/`
+  - Redpanda Broker Console: `http://localhost:8085/`
   - Receiver Swagger UI: `http://localhost:8080/ui/`
   - Processing Swagger UI: `http://localhost:8100/ui/`
-  - Redpanda Broker Console: `http://localhost:8085/`
 
 ---
 
@@ -206,3 +209,34 @@ Collects and audits real-time user login and access-control events to monitor su
 
 - **Tracing:** `receiver` injects a unique `trace_id` (nanosecond timestamp) into each event payload before publishing to Kafka. Both `storage-worker` (saving to MySQL) and `storage` (serving GET endpoints) log and preserve this trace ID across microservice boundaries.
 - **Logging:** Configured in `log_conf.yml` across services, writing `DEBUG`/`INFO` logs to both the terminal/Docker logs and `app.log`.
+
+### 5. Fault Tolerance & Resilience (Lab 10)
+
+- **Degraded Mode (HTTP 503):**
+  - If Redpanda/Kafka is unavailable, `receiver` enters degraded mode and returns HTTP 503 on `POST /auth/login` and `POST /auth/access-check`.
+  - If MySQL is unavailable, `storage` returns HTTP 503 on `GET /auth/login`, `GET /auth/access-check`, and `GET /status`.
+  - If Redis is unavailable, `processing` returns HTTP 503 on `GET /stats`.
+- **Zero Data Loss & Safe Offset Commits:**
+  - `storage-worker` uses `enable.auto.commit: False` and manually commits Kafka offsets synchronously only after a successful database write.
+  - When MySQL is down, `storage-worker` retries with exponential backoff without committing offsets, allowing Kafka to buffer incoming events.
+- **Idempotency & Deduplication:**
+  - A unique constraint on `trace_id` in MySQL prevents duplicate rows. When duplicate messages arrive from Kafka, `storage-worker` catches `IntegrityError`, logs the duplicate, and safely commits the offset.
+- **Self-Healing Recovery:**
+  - All services automatically recover and resume processing as soon as their underlying dependencies return online, with no container restarts required.
+
+### 6. Observability & Telemetry (Lab 11)
+
+- **Prometheus (Port 9090):**
+  - Scrapes metrics periodically from Redpanda's Prometheus endpoint (`redpanda:9644`).
+  - Provides PromQL time-series metrics on topic partition offsets and queue depth:
+    `sum(vectorized_cluster_partition_end_offset) - sum(vectorized_cluster_partition_start_offset)`
+- **Loki (Port 3100):**
+  - High-performance, lightweight log aggregation engine indexing container metadata.
+- **Grafana Alloy (Port 12345):**
+  - Observability collector connected to `/var/run/docker.sock`. Automatically discovers all running microservice containers, labels their stdout/stderr logs, and ships them to Loki.
+- **Grafana (Port 3000):**
+  - Unified operational dashboard providing real-time visibility across 4 distinct data sources:
+    1. **MySQL Data Source:** Queries row counts from `login_event` and `access_check`.
+    2. **Infinity Data Source:** Parses live JSON security telemetry statistics from `http://processing:8100/stats`.
+    3. **Prometheus Data Source:** Tracks Kafka queue depth and topic offsets over time.
+    4. **Loki Data Source:** Real-time log stream with search filtering by `trace_id` and service names.
