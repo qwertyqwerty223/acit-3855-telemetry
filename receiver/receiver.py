@@ -30,7 +30,7 @@ async def start_producer():
     delay = 1
     while True:
         producer = AIOKafkaProducer(
-            bootstrap_servers=[KAFKA_BROKER],
+            bootstrap_servers=KAFKA_BROKER,
             enable_idempotence=True,
             request_timeout_ms=10_000,
             retry_backoff_ms=250,
